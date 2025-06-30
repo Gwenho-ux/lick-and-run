@@ -222,6 +222,12 @@ class Character {
             const messages = ["Attaboy!", "Working hard, huh?", "Keep it up!", "Good job!", "Nice work!"];
             const randomMessage = messages[Math.floor(Math.random() * messages.length)];
             
+            // Hide warning bubble first
+            const warningBubble = document.getElementById('warningBubble');
+            if (warningBubble) {
+                warningBubble.classList.remove('show');
+            }
+            
             // Show the message in speech bubble
             const speechBubble = document.getElementById('speechBubble');
             const speechText = speechBubble.querySelector('.speech-text');
@@ -862,10 +868,15 @@ class EventManager {
             // Desktop controls
             document.addEventListener('keydown', this.boundHandlers.keydown);
             document.addEventListener('keyup', this.boundHandlers.keyup);
-            document.addEventListener('mousedown', this.boundHandlers.mousedown);
-            document.addEventListener('mouseup', this.boundHandlers.mouseup);
-            document.addEventListener('touchstart', this.boundHandlers.touchstart);
-            document.addEventListener('touchend', this.boundHandlers.touchend);
+            
+            // Attach mouse events only to game container on desktop
+            const gameContainer = document.querySelector('.game-container');
+            if (gameContainer) {
+                gameContainer.addEventListener('mousedown', this.boundHandlers.mousedown);
+                gameContainer.addEventListener('mouseup', this.boundHandlers.mouseup);
+                gameContainer.addEventListener('touchstart', this.boundHandlers.touchstart);
+                gameContainer.addEventListener('touchend', this.boundHandlers.touchend);
+            }
         }
         document.addEventListener('contextmenu', this.boundHandlers.contextmenu);
     }
@@ -883,10 +894,15 @@ class EventManager {
             // Desktop controls
             document.removeEventListener('keydown', this.boundHandlers.keydown);
             document.removeEventListener('keyup', this.boundHandlers.keyup);
-            document.removeEventListener('mousedown', this.boundHandlers.mousedown);
-            document.removeEventListener('mouseup', this.boundHandlers.mouseup);
-            document.removeEventListener('touchstart', this.boundHandlers.touchstart);
-            document.removeEventListener('touchend', this.boundHandlers.touchend);
+            
+            // Remove mouse events from game container on desktop
+            const gameContainer = document.querySelector('.game-container');
+            if (gameContainer) {
+                gameContainer.removeEventListener('mousedown', this.boundHandlers.mousedown);
+                gameContainer.removeEventListener('mouseup', this.boundHandlers.mouseup);
+                gameContainer.removeEventListener('touchstart', this.boundHandlers.touchstart);
+                gameContainer.removeEventListener('touchend', this.boundHandlers.touchend);
+            }
         }
         document.removeEventListener('contextmenu', this.boundHandlers.contextmenu);
         this.isLicking = false;
@@ -907,16 +923,20 @@ class EventManager {
     }
 
     handleKeyDown(e) {
-        if (e.code === 'Space' && !e.repeat && this.game.state === 'playing') {
-            e.preventDefault();
-            this.startLicking();
+        if (e.code === 'Space') {
+            e.preventDefault(); // Always prevent default spacebar behavior
+            if (!e.repeat && this.game.state === 'playing') {
+                this.startLicking();
+            }
         }
     }
 
     handleKeyUp(e) {
-        if (e.code === 'Space' && this.game.state === 'playing') {
-            e.preventDefault();
-            this.stopLicking();
+        if (e.code === 'Space') {
+            e.preventDefault(); // Always prevent default spacebar behavior
+            if (this.game.state === 'playing') {
+                this.stopLicking();
+            }
         }
     }
 
@@ -996,15 +1016,43 @@ class Game {
         
         // Start playing background music on first user interaction
         this.musicStarted = false;
-        const startBackgroundMusic = () => {
+        
+        // Global spacebar prevention - prevent spacebar from triggering any default behavior
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+            }
+        });
+        
+        // Add event listener for first user interaction to start background music
+        const startMusicOnInteraction = (e) => {
+            // Ignore spacebar key to prevent interference with game controls
+            if (e && e.type === 'keydown' && e.code === 'Space') {
+                return;
+            }
+            
+            if (!this.musicStarted && !this.audio.musicMuted) {
+                this.audio.play('background', true);
+                this.musicStarted = true;
+                // Remove the event listeners after first interaction
+                document.removeEventListener('click', startMusicOnInteraction);
+                document.removeEventListener('touchstart', startMusicOnInteraction);
+                document.removeEventListener('keydown', startMusicOnInteraction);
+            }
+        };
+        
+        // Listen for any user interaction to start background music
+        document.addEventListener('click', startMusicOnInteraction);
+        document.addEventListener('touchstart', startMusicOnInteraction);
+        document.addEventListener('keydown', startMusicOnInteraction);
+        
+        // Store the function reference for manual calls
+        this.startBackgroundMusic = () => {
             if (!this.musicStarted && !this.audio.musicMuted) {
                 this.audio.play('background', true);
                 this.musicStarted = true;
             }
         };
-        
-        // Store the function reference for later use
-        this.startBackgroundMusic = startBackgroundMusic;
     }
 
     startGame() {
@@ -1247,6 +1295,8 @@ class Game {
             }
         }
     }
+
+
 }
 
 // Initialize game when DOM is loaded

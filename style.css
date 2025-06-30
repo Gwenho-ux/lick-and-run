@@ -895,7 +895,7 @@ body::before {
 /* Game Instruction */
 .game-instruction {
     text-align: center;
-    margin-bottom: 20px;
+    margin-top: 20px;
     color: var(--text-secondary);
     font-size: 1.1rem;
     opacity: 0.8;
@@ -906,9 +906,21 @@ body::before {
     font-weight: 700;
 }
 
+/* Desktop specific adjustments */
+@media (min-width: 769px) {
+    /* Move candy and folder down 10% more on desktop */
+    .candy-area {
+        bottom: -114px !important; /* 30% of 380px (20% + 10% more) */
+    }
+    
+    .document-mode {
+        bottom: -76px !important; /* 20% of 380px (10% + 10% more) */
+    }
+}
+
 /* Mobile Lick Button */
 .mobile-lick-button {
-    display: none; /* Hidden by default, shown only on mobile */
+    display: none; /* Hidden by default on desktop */
     width: 80%;
     max-width: 300px;
     margin: 20px auto 0;
