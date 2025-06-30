@@ -1,0 +1,33 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Optional - uncomment if you add actual assets
+# assets/*.png
+# assets/*.jpg
+# assets/*.gif
+# assets/audio/*.mp3
+# assets/audio/*.ogg
+
+# Build outputs (if you add build tools later)
+dist/
+build/
+
+# Node modules (if you add npm packages later)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local 
