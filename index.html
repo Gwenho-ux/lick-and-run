@@ -10,6 +10,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Audio Controls -->
+    <div class="audio-controls">
+        <button id="musicToggle" class="audio-toggle music-on" title="Toggle Music">
+            <span class="icon-on">🎵</span>
+            <span class="icon-off">🔇</span>
+        </button>
+        <button id="sfxToggle" class="audio-toggle sfx-on" title="Toggle Sound Effects">
+            <span class="icon-on">🔊</span>
+            <span class="icon-off">🔈</span>
+        </button>
+    </div>
+
     <!-- Start Screen -->
     <div id="startScreen" class="screen active">
         <div class="screen-content">
@@ -65,9 +77,12 @@
         <div class="game-container">
             <!-- Character Area -->
             <div class="character-area">
-                <img id="characterImage" src="assets/Images/charactor/character-move.png" alt="Character" class="character-image">
+                <img id="characterImage" class="character-image" src="assets/Images/charactor/character-move.png" alt="Character">
                 <div class="speech-bubble" id="speechBubble">
-                    <span class="speech-text">Umm...?</span>
+                    <span class="speech-text">Working hard!</span>
+                </div>
+                <div class="warning-bubble" id="warningBubble">
+                    <span class="warning-text">!</span>
                 </div>
             </div>
 

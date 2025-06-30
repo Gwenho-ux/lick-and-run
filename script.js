@@ -5,14 +5,15 @@
 
 // Game Configuration
 const CONFIG = {
-    GAME_DURATION: 90, // seconds (increased from 60)
-    LICK_GOAL: 20, // seconds (increased from 15)
-    FLASH_WARNING_TIME: 1.5, // seconds before stare (increased from 0.2 for better reaction time)
+    GAME_DURATION: 60, // seconds
+    LICK_GOAL: 30, // seconds
+    FLASH_WARNING_TIME: 1, // seconds before stare (increased from 0.2 for better reaction time)
     PULSE_START_TIME: 3, // last 3 seconds
-    MIN_STARE_INTERVAL: 2, // minimum seconds between stares (decreased from 3)
-    MAX_STARE_INTERVAL: 5, // maximum seconds between stares (decreased from 8)
-    STARE_DURATION: 2.5, // how long character stares (increased from 2)
-    FAKE_ALERT_CHANCE: 0.3, // 30% chance of fake alert (decreased from 40%)
+    MIN_STARE_INTERVAL: 5, // minimum seconds between stares (increased for easier gameplay)
+    MAX_STARE_INTERVAL: 15, // maximum seconds between stares (increased for easier gameplay)
+    MIN_STARE_DURATION: 1, // minimum stare duration
+    MAX_STARE_DURATION: 2, // maximum stare duration
+    FAKE_ALERT_CHANCE: 0.20, // 15% chance of fake alert (decreased from 30%)
     COUNTDOWN_DURATION: 3 // countdown seconds
 };
 
@@ -159,7 +160,7 @@ class Character {
                 this.currentMoveImage = this.currentMoveImage === 1 ? 2 : 1;
                 this.characterImage.src = `assets/Images/charactor/character-move${this.currentMoveImage === 2 ? '-2' : ''}.png`;
             }
-        }, 1000 + Math.random() * 2000); // Random interval between 1-3 seconds
+        }, 500 + Math.random() * 1000); // Random interval between 0.5-1.5 seconds (50% faster)
     }
 
     stopMoveAnimation() {
@@ -205,13 +206,52 @@ class Character {
     executeStare() {
         this.isStaring = true;
         this.showStareState();
+        
+        // Stop humming when character stares
+        if (window.game && window.game.audio) {
+            window.game.audio.stop('humming');
+        }
+        
         if (this.onStare) this.onStare();
+
+        // Variable stare duration
+        const stareDuration = Math.random() * (CONFIG.MAX_STARE_DURATION - CONFIG.MIN_STARE_DURATION) + CONFIG.MIN_STARE_DURATION;
+
+        // Check immediately if player is not licking when stare starts
+        if (window.game && window.game.state === 'playing' && !window.game.isLicking) {
+            const messages = ["Attaboy!", "Working hard, huh?", "Keep it up!", "Good job!", "Nice work!"];
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            
+            // Show the message in speech bubble
+            const speechBubble = document.getElementById('speechBubble');
+            const speechText = speechBubble.querySelector('.speech-text');
+            if (speechText && speechBubble) {
+                speechText.textContent = randomMessage;
+                speechBubble.classList.add('show');
+                
+                // Play happy sound
+                if (window.game && window.game.audio) {
+                    window.game.audio.play('happy');
+                }
+                
+                // Hide speech bubble after 1.5 seconds or before stare ends
+                const hideTime = Math.min(1500, (stareDuration * 1000) - 500);
+                setTimeout(() => {
+                    speechBubble.classList.remove('show');
+                }, hideTime);
+            }
+        }
 
         setTimeout(() => {
             this.isStaring = false;
             this.showNormalState();
             this.scheduleNextEvent();
-        }, CONFIG.STARE_DURATION * 1000);
+            
+            // Resume humming after stare ends
+            if (window.game && window.game.audio && window.game.state === 'playing') {
+                window.game.audio.play('humming', true);
+            }
+        }, stareDuration * 1000);
     }
 
     executeFakeAlert() {
@@ -244,6 +284,10 @@ class Character {
 
     destroy() {
         this.stopMoveAnimation();
+        this.isStaring = false;
+        this.isFakeAlert = false;
+        this.isAngry = false;
+        this.eventScheduled = false;
     }
 }
 
@@ -287,40 +331,179 @@ class CandyManager {
  */
 class AudioManager {
     constructor() {
-        // Placeholder audio references
+        // Define all sound files
         this.sounds = {
-            hum: 'assets/audio/hum-loop.mp3',
-            lick: 'assets/audio/lick-sfx.mp3',
-            caught: 'assets/audio/caught-scream.mp3',
-            fakeAlert: 'assets/audio/umm-voice.mp3',
-            countdown: 'assets/audio/countdown-tick.mp3',
-            victory: 'assets/audio/victory-sting.mp3',
-            intensify: 'assets/audio/music-intense.mp3'
+            background: 'assets/audio/background.mp3',
+            humming: 'assets/audio/humming.mp3',
+            click: 'assets/audio/click.mp3',
+            lick: 'assets/audio/lick.mp3',
+            switch: 'assets/audio/switch.mp3',
+            win: 'assets/audio/win.mp3',
+            lose: 'assets/audio/lose.mp3',
+            warning: 'assets/audio/warning.mp3',
+            happy: 'assets/audio/happy.mp3'
         };
 
-        // In a real implementation, these would be Audio objects
+        // Create Audio objects for each sound
         this.audioElements = {};
+        this.isInitialized = false;
+        
+        // Mute states
+        this.musicMuted = false;
+        this.sfxMuted = false;
+        
+        // Track which sounds are music vs sfx
+        this.musicSounds = ['background'];
+        this.sfxSounds = ['humming', 'click', 'lick', 'switch', 'win', 'lose', 'warning', 'happy'];
+        
+        // Track if background music has been started
+        this.backgroundMusicStarted = false;
     }
 
     preload() {
-        // Placeholder for audio preloading
-        console.log('Audio preloading placeholder');
+        // Create Audio objects for all sounds
+        Object.entries(this.sounds).forEach(([name, path]) => {
+            const audio = new Audio(path);
+            audio.preload = 'auto';
+            
+            // Set up looping for specific sounds
+            if (name === 'background' || name === 'humming' || name === 'lick') {
+                audio.loop = true;
+            }
+            
+            // Set volumes
+            if (name === 'background') {
+                audio.volume = 0.1; // Background music quieter
+            } else if (name === 'humming') {
+                audio.volume = 0.3;
+            } else if (name === 'click' || name === 'lick' || name === 'win' || name === 'lose') {
+                audio.volume = 1.0;
+            } else if (name === 'switch') {
+                audio.volume = 0.3;
+            } else if (name === 'warning') {
+                audio.volume = 0.7;
+            } else if (name === 'happy') {
+                audio.volume = 0.8;
+            } else {
+                audio.volume = 0.7;
+            }
+            
+            this.audioElements[name] = audio;
+        });
+        
+        this.isInitialized = true;
     }
 
     play(soundName, loop = false) {
-        console.log(`Playing sound: ${soundName}${loop ? ' (looped)' : ''}`);
+        if (!this.isInitialized) {
+            this.preload();
+        }
+        
+        // Check if sound should be muted
+        if (this.musicSounds.includes(soundName) && this.musicMuted) return;
+        if (this.sfxSounds.includes(soundName) && this.sfxMuted) return;
+        
+        const audio = this.audioElements[soundName];
+        if (audio) {
+            // Reset the audio to start
+            audio.currentTime = 0;
+            
+            // Set loop if specified
+            if (loop !== undefined) {
+                audio.loop = loop;
+            }
+            
+            // Track if background music has started
+            if (soundName === 'background') {
+                this.backgroundMusicStarted = true;
+            }
+            
+            // Play the sound
+            audio.play().catch(error => {
+                console.warn(`Failed to play sound: ${soundName}`, error);
+            });
+        }
     }
 
     stop(soundName) {
-        console.log(`Stopping sound: ${soundName}`);
+        const audio = this.audioElements[soundName];
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
     }
 
     stopAll() {
-        console.log('Stopping all sounds');
+        Object.values(this.audioElements).forEach(audio => {
+            audio.pause();
+            audio.currentTime = 0;
+        });
     }
 
     setVolume(soundName, volume) {
-        console.log(`Setting ${soundName} volume to ${volume}`);
+        const audio = this.audioElements[soundName];
+        if (audio) {
+            audio.volume = Math.max(0, Math.min(1, volume));
+        }
+    }
+    
+    // Fade out a sound over duration milliseconds
+    fadeOut(soundName, duration = 1000) {
+        const audio = this.audioElements[soundName];
+        if (audio && !audio.paused) {
+            const startVolume = audio.volume;
+            const fadeInterval = 50; // Update every 50ms
+            const fadeSteps = duration / fadeInterval;
+            const volumeStep = startVolume / fadeSteps;
+            
+            const fade = setInterval(() => {
+                if (audio.volume > volumeStep) {
+                    audio.volume -= volumeStep;
+                } else {
+                    audio.volume = 0;
+                    audio.pause();
+                    audio.volume = startVolume; // Reset volume for next play
+                    clearInterval(fade);
+                }
+            }, fadeInterval);
+        }
+    }
+    
+    toggleMusic() {
+        this.musicMuted = !this.musicMuted;
+        
+        // Stop music if muted
+        if (this.musicMuted) {
+            this.musicSounds.forEach(soundName => {
+                const audio = this.audioElements[soundName];
+                if (audio && !audio.paused) {
+                    audio.pause();
+                }
+            });
+        } else {
+            // Resume background music if it was previously started
+            if (this.backgroundMusicStarted) {
+                this.play('background', true);
+            }
+        }
+        
+        return this.musicMuted;
+    }
+    
+    toggleSFX() {
+        this.sfxMuted = !this.sfxMuted;
+        
+        // Stop all sfx if muted
+        if (this.sfxMuted) {
+            this.sfxSounds.forEach(soundName => {
+                const audio = this.audioElements[soundName];
+                if (audio && !audio.paused) {
+                    audio.pause();
+                }
+            });
+        }
+        
+        return this.sfxMuted;
     }
 }
 
@@ -388,6 +571,7 @@ class UIManager {
             // Game screen
             characterImage: document.getElementById('characterImage'),
             speechBubble: document.getElementById('speechBubble'),
+            warningBubble: document.getElementById('warningBubble'),
             candyArea: document.getElementById('candyArea'),
             documentMode: document.getElementById('documentMode'),
             flashWarning: document.getElementById('flashWarning'),
@@ -429,6 +613,22 @@ class UIManager {
         this.elements.timerBar.style.width = `${percentage}%`;
         this.elements.timerText.textContent = `${Math.ceil(remaining)}s`;
 
+        // Update timer color based on time remaining
+        this.elements.timerBar.classList.remove('timer-green', 'timer-yellow', 'timer-red');
+        
+        if (percentage > 50) {
+            this.elements.timerBar.classList.add('timer-green');
+        } else if (percentage > 20) {
+            this.elements.timerBar.classList.add('timer-yellow');
+        } else {
+            this.elements.timerBar.classList.add('timer-red');
+        }
+
+        // Red frame effect for last 5 seconds
+        if (remaining <= 5 && !this.elements.gameContainer.classList.contains('critical-time')) {
+            this.elements.gameContainer.classList.add('critical-time');
+        }
+
         // Pulse effect for last 3 seconds
         if (remaining <= CONFIG.PULSE_START_TIME) {
             this.elements.gameContainer.classList.add('pulse');
@@ -460,16 +660,24 @@ class UIManager {
     }
 
     flashWarning() {
-        // Show exclamation mark in speech bubble
-        const speechText = this.elements.speechBubble.querySelector('.speech-text');
-        if (speechText) {
-            speechText.textContent = '!';
+        // Hide any existing speech bubble first
+        this.elements.speechBubble.classList.remove('show');
+        
+        // Show exclamation mark in warning bubble (red/orange)
+        const warningText = this.elements.warningBubble.querySelector('.warning-text');
+        if (warningText) {
+            warningText.textContent = '!';
         }
-        this.elements.speechBubble.classList.add('show');
+        this.elements.warningBubble.classList.add('show');
+        
+        // Play warning sound
+        if (window.game && window.game.audio) {
+            window.game.audio.play('warning');
+        }
         
         // Hide after 1.5 seconds
         setTimeout(() => {
-            this.elements.speechBubble.classList.remove('show');
+            this.elements.warningBubble.classList.remove('show');
         }, 1500);
     }
 
@@ -482,8 +690,14 @@ class UIManager {
     }
 
     showWinScreen(player) {
-        this.elements.winLickTime.textContent = `${player.lickingTime.toFixed(2)}s`;
-        this.elements.winCompletionTime.textContent = `${player.completionTime}s`;
+        // Hide the licking time stat item since we're not showing it
+        const lickTimeStatItem = this.elements.winLickTime.closest('.stat-item');
+        if (lickTimeStatItem) {
+            lickTimeStatItem.style.display = 'none';
+        }
+        
+        // Format completion time with decimal places
+        this.elements.winCompletionTime.textContent = `${player.completionTime.toFixed(2)}s`;
         this.showScreen('winScreen');
         this.showLeaderboard();
     }
@@ -504,10 +718,13 @@ class UIManager {
         entries.forEach((entry, index) => {
             const item = document.createElement('div');
             item.className = 'leaderboard-item';
+            const timeFormatted = typeof entry.completionTime === 'number' 
+                ? `${entry.completionTime.toFixed(2)}s` 
+                : `${entry.completionTime}s`;
             item.innerHTML = `
                 <span class="leaderboard-rank">#${index + 1}</span>
                 <span class="leaderboard-name">${entry.name}</span>
-                <span class="leaderboard-time">${entry.completionTime}s</span>
+                <span class="leaderboard-time">${timeFormatted}</span>
             `;
             this.elements.leaderboardList.appendChild(item);
         });
@@ -523,14 +740,17 @@ class UIManager {
 
     createSparkles() {
         // Create sparkle particle effects
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 10; i++) {
             setTimeout(() => {
                 const sparkle = document.createElement('div');
                 sparkle.className = 'sparkle-particle';
                 sparkle.style.left = `${Math.random() * 100}%`;
                 sparkle.style.animationDelay = `${Math.random() * 2}s`;
+                // Add some variation in size (20% smaller)
+                const scale = 0.64 + Math.random() * 0.32; // 0.64 to 0.96
+                sparkle.style.transform = `scale(${scale})`;
                 this.elements.sparkleParticles.appendChild(sparkle);
-            }, i * 200);
+            }, i * 100);
         }
     }
 
@@ -572,6 +792,7 @@ class EventManager {
     initialize() {
         // Start screen events
         this.game.ui.elements.playButton.addEventListener('click', () => {
+            this.game.audio.play('click'); // Play click sound
             if (this.game.ui.validatePlayerInput()) {
                 this.game.startGame();
             } else {
@@ -582,6 +803,7 @@ class EventManager {
         // Enter key on name input
         this.game.ui.elements.playerName.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && this.game.ui.validatePlayerInput()) {
+                this.game.audio.play('click'); // Play click sound
                 this.game.startGame();
             }
         });
@@ -589,9 +811,32 @@ class EventManager {
         // Replay buttons
         this.game.ui.elements.replayButtons.forEach(button => {
             button.addEventListener('click', () => {
+                this.game.audio.play('click'); // Play click sound
                 this.game.resetToStart();
             });
         });
+        
+        // Audio toggle buttons
+        const musicToggle = document.getElementById('musicToggle');
+        const sfxToggle = document.getElementById('sfxToggle');
+        
+        if (musicToggle) {
+            musicToggle.addEventListener('click', () => {
+                const isMuted = this.game.audio.toggleMusic();
+                musicToggle.classList.toggle('music-off', isMuted);
+                musicToggle.classList.toggle('music-on', !isMuted);
+            });
+        }
+        
+        if (sfxToggle) {
+            sfxToggle.addEventListener('click', () => {
+                const isMuted = this.game.audio.toggleSFX();
+                sfxToggle.classList.toggle('sfx-off', isMuted);
+                sfxToggle.classList.toggle('sfx-on', !isMuted);
+                // Play a click sound to test if sfx is on (won't play if just muted)
+                this.game.audio.play('click');
+            });
+        }
     }
 
     startGameControls() {
@@ -616,39 +861,51 @@ class EventManager {
     }
 
     handleKeyDown(e) {
-        if (e.code === 'Space' && !e.repeat) {
+        if (e.code === 'Space' && !e.repeat && this.game.state === 'playing') {
             e.preventDefault();
             this.startLicking();
         }
     }
 
     handleKeyUp(e) {
-        if (e.code === 'Space') {
+        if (e.code === 'Space' && this.game.state === 'playing') {
             e.preventDefault();
             this.stopLicking();
         }
     }
 
     handleMouseDown(e) {
-        if (e.button === 0) { // Left click only
-            this.startLicking();
+        if (e.button === 0 && this.game.state === 'playing') { // Left click only during gameplay
+            // Ignore clicks on UI elements (timer, audio controls, etc.)
+            const clickedElement = e.target;
+            const isUIElement = clickedElement.closest('.timer-bar') || 
+                              clickedElement.closest('.audio-controls') ||
+                              clickedElement.closest('.leaderboard');
+            
+            if (!isUIElement) {
+                this.startLicking();
+            }
         }
     }
 
     handleMouseUp(e) {
-        if (e.button === 0) {
+        if (e.button === 0 && this.game.state === 'playing') {
             this.stopLicking();
         }
     }
 
     handleTouchStart(e) {
-        e.preventDefault();
-        this.startLicking();
+        if (this.game.state === 'playing') {
+            e.preventDefault();
+            this.startLicking();
+        }
     }
 
     handleTouchEnd(e) {
-        e.preventDefault();
-        this.stopLicking();
+        if (this.game.state === 'playing') {
+            e.preventDefault();
+            this.stopLicking();
+        }
     }
 
     startLicking() {
@@ -690,11 +947,26 @@ class Game {
         this.audio.preload();
         this.leaderboard.loadFromStorage();
         this.updateLeaderboard();
+        
+        // Start playing background music on first user interaction
+        this.musicStarted = false;
+        const startBackgroundMusic = () => {
+            if (!this.musicStarted && !this.audio.musicMuted) {
+                this.audio.play('background', true);
+                this.musicStarted = true;
+            }
+        };
+        
+        // Store the function reference for later use
+        this.startBackgroundMusic = startBackgroundMusic;
     }
 
     startGame() {
         const playerData = this.ui.getPlayerInput();
         this.player = new Player(playerData.name, playerData.email);
+        
+        // Start background music when game starts
+        this.startBackgroundMusic();
         
         this.state = 'countdown';
         this.ui.showScreen('countdown');
@@ -704,13 +976,14 @@ class Game {
     runCountdown() {
         let count = CONFIG.COUNTDOWN_DURATION;
         this.ui.updateCountdown(count);
-        this.audio.play('countdown');
+        // Remove click sound from initial countdown
+        this.audio.play('humming', true); // Start humming during countdown
 
         const countdownInterval = setInterval(() => {
             count--;
             if (count > 0) {
                 this.ui.updateCountdown(count);
-                this.audio.play('countdown');
+                // Remove click sound from countdown updates
             } else {
                 clearInterval(countdownInterval);
                 this.startGameplay();
@@ -739,7 +1012,9 @@ class Game {
         // Start game
         this.events.startGameControls();
         this.timer.start();
-        this.audio.play('hum', true);
+        
+        // Humming already playing from countdown, background music from initialization
+        
         this.ui.showLicking(false);
     }
 
@@ -759,19 +1034,20 @@ class Game {
             this.candyManager.updateProgress(progress);
 
             // Check win condition
-            if (this.player.hasWon()) {
+            if (this.player.hasWon() && this.state === 'playing') {
                 this.endGame('win');
             }
         }
 
-        // Intensify music in last 3 seconds
+        // Play warning sound in last 3 seconds
         if (remaining <= CONFIG.PULSE_START_TIME && remaining > CONFIG.PULSE_START_TIME - deltaTime) {
-            this.audio.play('intensify', true);
+            this.audio.play('warning');
         }
     }
 
     onTimerComplete() {
-        if (!this.player.hasWon()) {
+        // Only trigger timeout if game is still playing and player hasn't won
+        if (this.state === 'playing' && !this.player.hasWon()) {
             this.endGame('timeout');
         }
     }
@@ -784,6 +1060,7 @@ class Game {
         } else {
             this.isLicking = true;
             this.ui.showLicking(true);
+            this.audio.play('switch'); // Play switch sound when changing to candy
             this.audio.play('lick', true);
         }
     }
@@ -792,6 +1069,7 @@ class Game {
         this.isLicking = false;
         this.ui.showLicking(false);
         this.audio.stop('lick');
+        this.audio.play('switch'); // Play switch sound when changing to folder
     }
 
     onCharacterStare() {
@@ -804,16 +1082,29 @@ class Game {
 
     onFakeAlert() {
         this.ui.showFakeAlert();
-        this.audio.play('fakeAlert');
+        this.audio.play('warning'); // Play warning sound for fake alerts too
     }
 
     endGame(outcome) {
+        // Prevent multiple endGame calls
+        if (this.state === 'ended') {
+            return;
+        }
+        
+        // Calculate completion time BEFORE stopping the timer
+        const completionTime = this.timer ? this.timer.getElapsed() : 0;
+        console.log('Game ending - completion time:', completionTime);
+        
         this.state = 'ended';
-        this.timer.stop();
+        if (this.timer) {
+            this.timer.stop();
+        }
         this.events.stopGameControls();
-        this.audio.stopAll();
+        
+        // Stop game sounds but keep background music
+        this.audio.stop('lick');
+        this.audio.stop('humming');
 
-        const completionTime = Math.floor(this.timer.getElapsed());
         this.player.setOutcome(outcome, completionTime);
 
         // Add to leaderboard if won
@@ -821,9 +1112,9 @@ class Game {
             this.leaderboard.addEntry(this.player.toLeaderboardEntry());
             this.updateLeaderboard();
             this.leaderboard.saveToStorage();
-            this.audio.play('victory');
-        } else if (outcome === 'caught') {
-            this.audio.play('caught');
+            this.audio.play('win');
+        } else if (outcome === 'caught' || outcome === 'timeout') {
+            this.audio.play('lose');
         }
 
         // Show appropriate end screen
@@ -837,6 +1128,11 @@ class Game {
     }
 
     resetToStart() {
+        // Ensure we're not in an ended state that might cause issues
+        if (this.state === 'ended') {
+            this.state = 'resetting';
+        }
+        
         this.state = 'start';
         this.player = null;
         this.timer = null;
@@ -860,6 +1156,24 @@ class Game {
         this.ui.updateLickProgress(0);
         this.candyManager.reset();
         this.ui.elements.gameContainer.classList.remove('pulse');
+        this.ui.elements.gameContainer.classList.remove('critical-time');
+        this.ui.elements.timerBar.classList.remove('timer-green', 'timer-yellow', 'timer-red');
+        
+        // Hide any lingering bubbles
+        this.ui.elements.speechBubble.classList.remove('show');
+        this.ui.elements.warningBubble.classList.remove('show');
+        
+        // Reset character image to normal state
+        const characterImage = document.getElementById('characterImage');
+        if (characterImage) {
+            characterImage.src = 'assets/Images/charactor/character-move.png';
+        }
+        
+        // Reset win screen stat visibility
+        const lickTimeStatItem = this.ui.elements.winLickTime?.closest('.stat-item');
+        if (lickTimeStatItem) {
+            lickTimeStatItem.style.display = '';
+        }
     }
 
     updateLeaderboard() {

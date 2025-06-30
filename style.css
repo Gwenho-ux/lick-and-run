@@ -9,7 +9,7 @@
     /* Color Palette - Sci-fi Candy Theme */
     --primary-purple: #9D4EDD;
     --primary-blue: #5E60CE;
-    --primary-pink: #FF006E;
+    --primary-pink: #E178A8;
     --accent-cyan: #00F5FF;
     --accent-yellow: #FFE94E;
     
@@ -269,6 +269,24 @@ body::before {
     box-shadow: var(--shadow-glow);
     position: relative;
     overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Red frame warning for last 5 seconds */
+.game-container.critical-time {
+    border-color: #ff0000;
+    animation: redFramePulse 0.5s ease-in-out infinite;
+}
+
+@keyframes redFramePulse {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.5),
+                    inset 0 0 20px rgba(255, 0, 0, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(255, 0, 0, 0.8),
+                    inset 0 0 40px rgba(255, 0, 0, 0.2);
+    }
 }
 
 /* Character Area */
@@ -293,16 +311,18 @@ body::before {
     top: -60px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--accent-yellow);
-    color: var(--bg-dark);
+    background: #E178A8; /* Pink background */
+    color: #FFFFFF; /* White text */
     padding: 10px 20px;
     border-radius: 20px;
     font-weight: 900;
-    font-size: 2rem;
+    font-size: 1.2rem; /* 40% smaller than 2rem */
     opacity: 0;
     transition: opacity 0.3s ease;
     min-width: 50px;
     text-align: center;
+    white-space: nowrap; /* Keep text in one line */
+    box-shadow: 0 0 20px rgba(255, 0, 110, 0.6); /* Pink glow */
 }
 
 .speech-bubble.show {
@@ -319,7 +339,44 @@ body::before {
     height: 0;
     border-left: 10px solid transparent;
     border-right: 10px solid transparent;
-    border-top: 10px solid var(--accent-yellow);
+    border-top: 10px solid #E178A8; /* Match pink background */
+}
+
+/* Warning Bubble - Red/Orange for warnings */
+.warning-bubble {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #FEEA49; /* Orange-red background */
+    color: #282844; /* White text */
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 900;
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    min-width: 50px;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 0 20px rgba(255, 69, 0, 0.6); /* Orange-red glow */
+}
+
+.warning-bubble.show {
+    opacity: 1;
+}
+
+.warning-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #FEEA49; /* Match orange-red background */
 }
 
 /* Candy Area */
@@ -432,9 +489,22 @@ body::before {
 
 .timer-fill {
     height: 100%;
-    background: var(--gradient-candy);
+    background: linear-gradient(90deg, #00EDAA, #5BF05A); /* Default green gradient */
     width: 100%;
-    transition: width 1s linear;
+    transition: width 1s linear, background 0.5s ease;
+}
+
+/* Dynamic timer colors based on percentage */
+.timer-fill.timer-green {
+    background: linear-gradient(90deg, #00EDAA, #5BF05A) !important;
+}
+
+.timer-fill.timer-yellow {
+    background: linear-gradient(90deg, #ffcc00, #ff9900) !important;
+}
+
+.timer-fill.timer-red {
+    background: linear-gradient(90deg, #ff6600, #ff0000) !important;
 }
 
 .timer-text {
@@ -475,8 +545,8 @@ body::before {
 }
 
 .result-container.lose .result-title {
-    color: #FF0000;
-    text-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+    color: #FF3A68;
+    text-shadow: 0 0 30px rgba(255, 58, 104, 0.8);
 }
 
 .result-message {
@@ -514,11 +584,85 @@ body::before {
     text-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
 }
 
+/* Audio Controls */
+.audio-controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.audio-toggle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(36, 0, 70, 0.95);
+    border: 3px solid rgba(157, 78, 221, 0.8);
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.audio-toggle:hover {
+    transform: scale(1.1);
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 25px rgba(255, 0, 110, 0.6);
+}
+
+.audio-toggle:active {
+    transform: scale(0.95);
+}
+
+.audio-toggle .icon-on,
+.audio-toggle .icon-off {
+    position: absolute;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.audio-toggle.music-on .icon-off,
+.audio-toggle.sfx-on .icon-off {
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+.audio-toggle.music-off .icon-on,
+.audio-toggle.sfx-off .icon-on {
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+.audio-toggle.music-on .icon-on,
+.audio-toggle.sfx-on .icon-on {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.audio-toggle.music-off .icon-off,
+.audio-toggle.sfx-off .icon-off {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.audio-toggle.music-off,
+.audio-toggle.sfx-off {
+    background: rgba(80, 80, 80, 0.8);
+    border-color: rgba(100, 100, 100, 0.8);
+}
+
 /* Leaderboard */
 .leaderboard {
     position: fixed;
     right: 20px;
-    top: 20px;
+    top: 90px; /* Moved down to avoid audio controls */
     background: rgba(36, 0, 70, 0.9);
     border-radius: 20px;
     padding: 20px;
@@ -707,18 +851,19 @@ body::before {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 200px;
-    height: 200px;
+    width: 240px;
+    height: 240px;
     pointer-events: none;
 }
 
 .sparkle-particle {
     position: absolute;
-    width: 4px;
-    height: 4px;
+    width: 10px;
+    height: 10px;
     background: var(--accent-yellow);
     border-radius: 50%;
     animation: sparkleFloat 2s ease-in-out infinite;
+    box-shadow: 0 0 8px var(--accent-yellow), 0 0 16px rgba(255, 221, 0, 0.5);
 }
 
 @keyframes sparkleFloat {
@@ -728,10 +873,10 @@ body::before {
     }
     50% {
         opacity: 1;
-        transform: translateY(-50px) scale(1);
+        transform: translateY(-64px) scale(1.2);
     }
     100% {
-        transform: translateY(-100px) scale(0);
+        transform: translateY(-120px) scale(0);
         opacity: 0;
     }
 }
