@@ -6,14 +6,14 @@
 // Game Configuration
 const CONFIG = {
     GAME_DURATION: 60, // seconds
-    LICK_GOAL: 30, // seconds
-    FLASH_WARNING_TIME: 1, // seconds before stare (increased from 0.2 for better reaction time)
+    LICK_GOAL: 35, // seconds (increased from 30 - need to lick 5 seconds more)
+    FLASH_WARNING_TIME: 0.8, // seconds before stare (decreased from 1.0 for less reaction time)
     PULSE_START_TIME: 3, // last 3 seconds
-    MIN_STARE_INTERVAL: 5, // minimum seconds between stares (increased for easier gameplay)
-    MAX_STARE_INTERVAL: 15, // maximum seconds between stares (increased for easier gameplay)
-    MIN_STARE_DURATION: 1, // minimum stare duration
-    MAX_STARE_DURATION: 2, // maximum stare duration
-    FAKE_ALERT_CHANCE: 0.20, // 15% chance of fake alert (decreased from 30%)
+    MIN_STARE_INTERVAL: 4, // minimum seconds between stares (decreased from 5 - more frequent checks)
+    MAX_STARE_INTERVAL: 12, // maximum seconds between stares (decreased from 15 - more frequent checks)
+    MIN_STARE_DURATION: 1.5, // minimum stare duration (increased from 1.0)
+    MAX_STARE_DURATION: 2.5, // maximum stare duration (increased from 2.0)
+    FAKE_ALERT_CHANCE: 0.25, // 25% chance of fake alert (increased from 20%)
     COUNTDOWN_DURATION: 3 // countdown seconds
 };
 
