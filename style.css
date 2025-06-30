@@ -886,6 +886,20 @@ body::before {
     animation: screenPulse 0.5s ease infinite;
 }
 
+/* Game Instruction */
+.game-instruction {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.game-instruction strong {
+    color: var(--accent-yellow);
+    font-weight: 700;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .game-title {
@@ -993,6 +1007,11 @@ body::before {
         padding: 14px 28px;
         font-size: 1.1rem;
     }
+    
+    .game-instruction {
+        margin-top: 15px;
+        font-size: 0.95rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1037,6 +1056,11 @@ body::before {
     
     .glowing-container {
         margin-bottom: 10px;
+    }
+    
+    .game-instruction {
+        margin-top: 10px;
+        font-size: 0.85rem;
     }
 }
 
