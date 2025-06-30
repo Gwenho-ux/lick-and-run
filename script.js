@@ -1142,6 +1142,10 @@ class Game {
     onTimerComplete() {
         // Only trigger timeout if game is still playing and player hasn't won
         if (this.state === 'playing' && !this.player.hasWon()) {
+            // Show angry face for timeout as well
+            if (this.character) {
+                this.character.onCaught();
+            }
             this.endGame('timeout');
         }
     }
@@ -1212,13 +1216,14 @@ class Game {
         }
 
         // Show appropriate end screen
+        // For fail cases, ensure angry face is shown for 2 seconds
         setTimeout(() => {
             if (outcome === 'win') {
                 this.ui.showWinScreen(this.player);
             } else {
                 this.ui.showLoseScreen(outcome, this.player);
             }
-        }, outcome === 'caught' ? 1000 : 500);
+        }, outcome === 'caught' ? 2000 : (outcome === 'timeout' ? 2000 : 500));
     }
 
     resetToStart() {
