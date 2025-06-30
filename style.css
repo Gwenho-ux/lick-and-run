@@ -889,11 +889,24 @@ body::before {
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .game-title {
-        font-size: 2.2rem;
+        font-size: 1.8rem;
     }
     
     .title-accent {
-        font-size: 2.8rem;
+        font-size: 2.2rem;
+    }
+    
+    /* Make audio controls smaller on mobile */
+    .audio-controls {
+        top: 10px;
+        right: 10px;
+        gap: 8px;
+    }
+    
+    .audio-toggle {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
     }
     
     .game-container {
@@ -921,6 +934,12 @@ body::before {
     .character-image {
         width: 165px;
         height: 165px;
+    }
+    
+    /* Fix speech bubble positioning on mobile */
+    .speech-bubble,
+    .warning-bubble {
+        top: -50px; /* Move down from -60px to prevent cropping */
     }
     
     .candy-image {
@@ -978,11 +997,18 @@ body::before {
 
 @media (max-width: 480px) {
     .game-title {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
     }
     
     .title-accent {
-        font-size: 2.2rem;
+        font-size: 1.8rem;
+    }
+    
+    /* Even smaller audio controls for very small screens */
+    .audio-toggle {
+        width: 35px;
+        height: 35px;
+        font-size: 18px;
     }
     
     .instructions {
