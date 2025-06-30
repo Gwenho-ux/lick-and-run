@@ -30,11 +30,24 @@
 
 body {
     font-family: 'Poppins', sans-serif;
-    background: var(--gradient-bg);
+    background: url('assets/bg.png') no-repeat center center fixed;
+    background-size: cover;
     color: var(--text-primary);
     min-height: 100vh;
     overflow: hidden;
     position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-bg);
+    opacity: 0.8;
+    z-index: -1;
 }
 
 /* Screen Management */
@@ -59,23 +72,28 @@ body {
 
 .screen-content {
     text-align: center;
-    padding: 20px;
+    padding: 15px;
     max-width: 90%;
+    max-height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     animation: fadeInUp 0.8s ease;
 }
 
 /* Start Screen Styles */
 .glowing-container {
     position: relative;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
 }
 
 .game-title {
-    font-size: 4rem;
+    font-size: 3rem;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 2px;
-    line-height: 1.2;
+    line-height: 1.1;
 }
 
 .title-glow {
@@ -90,7 +108,7 @@ body {
     display: block;
     color: var(--accent-cyan);
     text-shadow: 0 0 30px rgba(0, 245, 255, 0.8);
-    font-size: 5rem;
+    font-size: 3.5rem;
 }
 
 .sparkle-effect {
@@ -108,8 +126,8 @@ body {
 .instructions {
     background: rgba(36, 0, 70, 0.6);
     border-radius: 20px;
-    padding: 30px;
-    margin-bottom: 30px;
+    padding: 20px;
+    margin-bottom: 20px;
     backdrop-filter: blur(10px);
     border: 2px solid rgba(157, 78, 221, 0.3);
     box-shadow: var(--shadow-card);
@@ -117,25 +135,25 @@ body {
 
 .instructions h2 {
     color: var(--text-secondary);
-    margin-bottom: 20px;
-    font-size: 1.8rem;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
 }
 
 .instruction-item {
     display: flex;
     align-items: center;
-    gap: 15px;
-    margin: 15px 0;
+    gap: 12px;
+    margin: 10px 0;
     text-align: left;
 }
 
 .instruction-item .icon {
-    font-size: 2rem;
-    min-width: 40px;
+    font-size: 1.5rem;
+    min-width: 30px;
 }
 
 .instruction-item p {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: var(--text-primary);
 }
 
@@ -148,18 +166,18 @@ body {
 .player-form {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     max-width: 400px;
     margin: 0 auto;
 }
 
 .player-form input {
-    padding: 15px 20px;
+    padding: 12px 16px;
     border-radius: 15px;
     border: 2px solid rgba(157, 78, 221, 0.5);
     background: rgba(36, 0, 70, 0.8);
     color: var(--text-primary);
-    font-size: 1.1rem;
+    font-size: 1rem;
     transition: all 0.3s ease;
 }
 
@@ -172,12 +190,12 @@ body {
 /* Button Styles */
 .play-button, .replay-button {
     position: relative;
-    padding: 20px 40px;
+    padding: 16px 32px;
     border: none;
     border-radius: 20px;
     background: var(--gradient-candy);
     cursor: pointer;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -245,27 +263,26 @@ body {
 .game-container {
     width: 500px;
     height: 700px;
-    background: rgba(36, 0, 70, 0.9);
+    background: url('assets/bg.png') center/cover;
     border-radius: 30px;
     border: 3px solid rgba(157, 78, 221, 0.5);
     box-shadow: var(--shadow-glow);
     position: relative;
     overflow: hidden;
-    backdrop-filter: blur(10px);
 }
 
 /* Character Area */
 .character-area {
     position: absolute;
-    top: 50%;
+    top: 10%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
     z-index: 10;
 }
 
 .character-image {
-    width: 200px;
-    height: 200px;
+    width: 220px;
+    height: 220px;
     object-fit: contain;
     filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.5));
     transition: transform 0.3s ease;
@@ -305,7 +322,7 @@ body {
 /* Candy Area */
 .candy-area {
     position: absolute;
-    bottom: 50px;
+    bottom: -38px; /* 10% of 380px to crop from bottom */
     left: 50%;
     transform: translateX(-50%);
     opacity: 0;
@@ -322,11 +339,11 @@ body {
 }
 
 .candy-image {
-    width: 100px;
-    height: 100px;
+    width: 380px;
+    height: 380px;
     object-fit: contain;
     filter: drop-shadow(0 0 20px rgba(255, 0, 110, 0.5));
-    animation: candyFloat 2s ease-in-out infinite;
+    animation: candyShake 0.5s ease-in-out infinite;
 }
 
 .lick-progress {
@@ -365,36 +382,23 @@ body {
 /* Document Mode */
 .document-mode {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.95);
+    bottom: -38px; /* 10% of 380px to crop from bottom */
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 20;
     display: none;
-    padding: 40px;
 }
 
 .document-mode.active {
     display: block;
 }
 
-.document-content {
-    color: #333;
-    text-align: left;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.document-content h3 {
-    color: #000;
-    margin-bottom: 20px;
-    font-size: 1.8rem;
-}
-
-.document-content p {
-    line-height: 1.6;
-    color: #666;
+.folder-image {
+    width: 380px;
+    height: 380px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.5));
+    animation: folderSwing 2s ease-in-out infinite;
 }
 
 /* Flash Warning */
@@ -404,25 +408,29 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    border: 10px solid #FF0000;
+    border: 15px solid #FF0000;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(255, 0, 0, 0.2) 100%);
     opacity: 0;
     pointer-events: none;
     z-index: 100;
+    box-shadow: inset 0 0 50px rgba(255, 0, 0, 0.5);
 }
 
 .flash-warning.active {
-    animation: flashRed 0.2s ease;
+    animation: flashRed 0.8s ease 2; /* Longer duration and repeat twice */
 }
 
 /* Timer Bar */
 .timer-bar {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
     height: 60px;
     background: rgba(13, 2, 33, 0.9);
     border-top: 3px solid rgba(157, 78, 221, 0.5);
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
     z-index: 50;
 }
 
@@ -615,7 +623,16 @@ body {
     }
 }
 
-@keyframes candyFloat {
+@keyframes candyShake {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+@keyframes folderSwing {
     0%, 100% {
         transform: translateY(0) rotate(-5deg);
     }
@@ -628,8 +645,11 @@ body {
     0%, 100% {
         opacity: 0;
     }
-    50% {
+    25%, 75% {
         opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
     }
 }
 
@@ -735,11 +755,11 @@ body {
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .game-title {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
     }
     
     .title-accent {
-        font-size: 3rem;
+        font-size: 2.8rem;
     }
     
     .game-container {
@@ -750,21 +770,41 @@ body {
     }
     
     .instructions {
-        padding: 20px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .instructions h2 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
     }
     
     .instruction-item {
         font-size: 0.9rem;
+        margin: 8px 0;
     }
     
     .character-image {
-        width: 150px;
-        height: 150px;
+        width: 165px;
+        height: 165px;
     }
     
     .candy-image {
-        width: 80px;
-        height: 80px;
+        width: 250px;
+        height: 250px;
+    }
+    
+    .folder-image {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .candy-area {
+        bottom: -25px; /* 10% of 250px to crop from bottom */
+    }
+    
+    .document-mode {
+        bottom: -25px; /* 10% of 250px to crop from bottom */
     }
     
     .progress-bar-container {
@@ -787,9 +827,89 @@ body {
     .timer-text {
         font-size: 1.2rem;
     }
+    
+    .screen-content {
+        padding: 10px;
+    }
+    
+    .glowing-container {
+        margin-bottom: 15px;
+    }
+    
+    .play-button, .replay-button {
+        padding: 14px 28px;
+        font-size: 1.1rem;
+    }
 }
 
 @media (max-width: 480px) {
+    .game-title {
+        font-size: 1.8rem;
+    }
+    
+    .title-accent {
+        font-size: 2.2rem;
+    }
+    
+    .instructions {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .instructions h2 {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+    }
+    
+    .instruction-item {
+        margin: 6px 0;
+        font-size: 0.85rem;
+    }
+    
+    .play-button, .replay-button {
+        padding: 12px 24px;
+        font-size: 1rem;
+    }
+    
+    .screen-content {
+        padding: 8px;
+    }
+    
+    .glowing-container {
+        margin-bottom: 10px;
+    }
+}
+
+/* Height-based responsive design for shorter screens */
+@media (max-height: 700px) {
+    .game-title {
+        font-size: 2.5rem;
+    }
+    
+    .title-accent {
+        font-size: 3rem;
+    }
+    
+    .instructions {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .instructions h2 {
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+    }
+    
+    .instruction-item {
+        margin: 8px 0;
+    }
+    
+    .glowing-container {
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-height: 600px) {
     .game-title {
         font-size: 2rem;
     }
@@ -798,13 +918,32 @@ body {
         font-size: 2.5rem;
     }
     
+    .instructions {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
     .instructions h2 {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+    }
+    
+    .instruction-item {
+        margin: 6px 0;
+        font-size: 0.9rem;
     }
     
     .play-button, .replay-button {
-        padding: 15px 30px;
-        font-size: 1.1rem;
+        padding: 12px 24px;
+        font-size: 1rem;
+    }
+    
+    .glowing-container {
+        margin-bottom: 10px;
+    }
+    
+    .screen-content {
+        padding: 8px;
     }
 }
 

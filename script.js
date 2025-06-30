@@ -5,14 +5,14 @@
 
 // Game Configuration
 const CONFIG = {
-    GAME_DURATION: 60, // seconds
-    LICK_GOAL: 15, // seconds
-    FLASH_WARNING_TIME: 0.2, // seconds before stare
+    GAME_DURATION: 90, // seconds (increased from 60)
+    LICK_GOAL: 20, // seconds (increased from 15)
+    FLASH_WARNING_TIME: 1.5, // seconds before stare (increased from 0.2 for better reaction time)
     PULSE_START_TIME: 3, // last 3 seconds
-    MIN_STARE_INTERVAL: 3, // minimum seconds between stares
-    MAX_STARE_INTERVAL: 8, // maximum seconds between stares
-    STARE_DURATION: 2, // how long character stares
-    FAKE_ALERT_CHANCE: 0.4, // 40% chance of fake alert
+    MIN_STARE_INTERVAL: 2, // minimum seconds between stares (decreased from 3)
+    MAX_STARE_INTERVAL: 5, // maximum seconds between stares (decreased from 8)
+    STARE_DURATION: 2.5, // how long character stares (increased from 2)
+    FAKE_ALERT_CHANCE: 0.3, // 30% chance of fake alert (decreased from 40%)
     COUNTDOWN_DURATION: 3 // countdown seconds
 };
 
@@ -127,18 +127,60 @@ class Character {
     constructor(onStare, onFakeAlert, onFlashWarning) {
         this.isStaring = false;
         this.isFakeAlert = false;
+        this.isAngry = false;
         this.onStare = onStare;
         this.onFakeAlert = onFakeAlert;
         this.onFlashWarning = onFlashWarning;
         this.nextEventTime = this.getRandomEventTime();
         this.eventScheduled = false;
+        this.moveAnimationInterval = null;
+        this.currentMoveImage = 1; // 1 or 2 for character-move.png and character-move-2.png
+        this.characterImage = document.getElementById('characterImage');
+        
+        // Start the random movement animation
+        this.startMoveAnimation();
     }
 
     reset() {
         this.isStaring = false;
         this.isFakeAlert = false;
+        this.isAngry = false;
         this.nextEventTime = this.getRandomEventTime();
         this.eventScheduled = false;
+        this.stopMoveAnimation();
+        this.startMoveAnimation();
+        this.showNormalState();
+    }
+
+    startMoveAnimation() {
+        // Randomly switch between character-move.png and character-move-2.png
+        this.moveAnimationInterval = setInterval(() => {
+            if (!this.isStaring && !this.isAngry) {
+                this.currentMoveImage = this.currentMoveImage === 1 ? 2 : 1;
+                this.characterImage.src = `assets/Images/charactor/character-move${this.currentMoveImage === 2 ? '-2' : ''}.png`;
+            }
+        }, 1000 + Math.random() * 2000); // Random interval between 1-3 seconds
+    }
+
+    stopMoveAnimation() {
+        if (this.moveAnimationInterval) {
+            clearInterval(this.moveAnimationInterval);
+            this.moveAnimationInterval = null;
+        }
+    }
+
+    showNormalState() {
+        this.characterImage.src = `assets/Images/charactor/character-move.png`;
+        this.currentMoveImage = 1;
+    }
+
+    showStareState() {
+        this.characterImage.src = 'assets/Images/charactor/character-stare.png';
+    }
+
+    showAngryState() {
+        this.isAngry = true;
+        this.characterImage.src = 'assets/Images/charactor/character-angry.png';
     }
 
     update(elapsedTime) {
@@ -163,10 +205,12 @@ class Character {
 
     executeStare() {
         this.isStaring = true;
+        this.showStareState();
         if (this.onStare) this.onStare();
 
         setTimeout(() => {
             this.isStaring = false;
+            this.showNormalState();
             this.scheduleNextEvent();
         }, CONFIG.STARE_DURATION * 1000);
     }
@@ -181,6 +225,15 @@ class Character {
         }, 1000); // Fake alerts last 1 second
     }
 
+    // Called when player is caught licking
+    onCaught() {
+        this.stopMoveAnimation();
+        this.showAngryState();
+        
+        // Show angry for 1 second, then the game will handle the transition to fail screen
+        // The game controller will handle the delay and screen transition
+    }
+
     scheduleNextEvent() {
         this.nextEventTime += this.getRandomEventTime();
         this.eventScheduled = false;
@@ -188,6 +241,45 @@ class Character {
 
     getRandomEventTime() {
         return Math.random() * (CONFIG.MAX_STARE_INTERVAL - CONFIG.MIN_STARE_INTERVAL) + CONFIG.MIN_STARE_INTERVAL;
+    }
+
+    destroy() {
+        this.stopMoveAnimation();
+    }
+}
+
+/**
+ * CandyManager Class - Manages candy progression through 5 states
+ */
+class CandyManager {
+    constructor() {
+        this.candyImage = document.getElementById('candyImage');
+        this.currentState = 1; // Start with candy_1.png (biggest)
+        this.maxState = 5; // candy_5.png is success state
+    }
+
+    reset() {
+        this.currentState = 1;
+        this.updateCandyImage();
+    }
+
+    updateProgress(progressPercentage) {
+        // Calculate which candy state to show based on progress
+        // 0-20% = candy_1, 20-40% = candy_2, 40-60% = candy_3, 60-80% = candy_4, 80-100% = candy_5
+        const newState = Math.min(Math.floor(progressPercentage / 20) + 1, this.maxState);
+        
+        if (newState !== this.currentState) {
+            this.currentState = newState;
+            this.updateCandyImage();
+        }
+    }
+
+    updateCandyImage() {
+        this.candyImage.src = `assets/Images/candy/candy_${this.currentState}.png`;
+    }
+
+    isSuccess() {
+        return this.currentState >= this.maxState;
     }
 }
 
@@ -361,13 +453,7 @@ class UIManager {
         }
     }
 
-    showCharacterStare(isStaring) {
-        if (isStaring) {
-            this.elements.characterImage.src = 'assets/character-stare.png';
-        } else {
-            this.elements.characterImage.src = 'assets/character-back.png';
-        }
-    }
+
 
     showFakeAlert() {
         this.elements.speechBubble.classList.add('show');
@@ -380,7 +466,7 @@ class UIManager {
         this.elements.flashWarning.classList.add('active');
         setTimeout(() => {
             this.elements.flashWarning.classList.remove('active');
-        }, 200);
+        }, 1600); // 0.8s animation × 2 repeats = 1.6s
     }
 
     updateCountdown(number) {
@@ -585,6 +671,7 @@ class Game {
         this.player = null;
         this.timer = null;
         this.character = null;
+        this.candyManager = new CandyManager();
         this.ui = new UIManager();
         this.audio = new AudioManager();
         this.leaderboard = new LeaderboardManager();
@@ -661,7 +748,11 @@ class Game {
         // Update licking progress if licking
         if (this.isLicking && !this.character.isStaring) {
             this.player.updateLickingTime(deltaTime);
-            this.ui.updateLickProgress(this.player.getProgress());
+            const progress = this.player.getProgress();
+            this.ui.updateLickProgress(progress);
+            
+            // Update candy progression
+            this.candyManager.updateProgress(progress);
 
             // Check win condition
             if (this.player.hasWon()) {
@@ -684,6 +775,7 @@ class Game {
     onLickStart() {
         if (this.character.isStaring) {
             // Player got caught!
+            this.character.onCaught();
             this.endGame('caught');
         } else {
             this.isLicking = true;
@@ -699,19 +791,11 @@ class Game {
     }
 
     onCharacterStare() {
-        this.ui.showCharacterStare(true);
-        
         // Check if player is currently licking
         if (this.isLicking) {
+            this.character.onCaught();
             this.endGame('caught');
         }
-
-        // Reset character after stare duration
-        setTimeout(() => {
-            if (this.state === 'playing') {
-                this.ui.showCharacterStare(false);
-            }
-        }, CONFIG.STARE_DURATION * 1000);
     }
 
     onFakeAlert() {
@@ -752,7 +836,13 @@ class Game {
         this.state = 'start';
         this.player = null;
         this.timer = null;
-        this.character = null;
+        
+        // Clean up character
+        if (this.character) {
+            this.character.destroy();
+            this.character = null;
+        }
+        
         this.isLicking = false;
         
         this.ui.hideLeaderboard();
@@ -764,7 +854,7 @@ class Game {
         // Reset UI elements
         this.ui.updateTimer(CONFIG.GAME_DURATION);
         this.ui.updateLickProgress(0);
-        this.ui.showCharacterStare(false);
+        this.candyManager.reset();
         this.ui.elements.gameContainer.classList.remove('pulse');
     }
 
