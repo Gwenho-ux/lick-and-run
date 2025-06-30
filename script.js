@@ -708,6 +708,12 @@ class UIManager {
 
     showLoseScreen(reason, player = null) {
         if (reason === 'caught') {
+            if (player) {
+                const caughtProgress = document.getElementById('caughtProgress');
+                if (caughtProgress) {
+                    caughtProgress.textContent = `${Math.floor(player.getProgress())}%`;
+                }
+            }
             this.showScreen('loseScreenCaught');
         } else if (reason === 'timeout') {
             if (player) {
