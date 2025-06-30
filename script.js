@@ -652,8 +652,6 @@ class UIManager {
         }
     }
 
-
-
     showFakeAlert() {
         // Fake alerts now use the same warning as real stares
         // The warning already shows via flashWarning()
@@ -778,6 +776,8 @@ class EventManager {
     constructor(game) {
         this.game = game;
         this.isLicking = false;
+        this.isMobileDevice = this.detectMobileDevice();
+        this.mobileLickButton = null;
         this.boundHandlers = {
             keydown: this.handleKeyDown.bind(this),
             keyup: this.handleKeyUp.bind(this),
@@ -785,11 +785,21 @@ class EventManager {
             mouseup: this.handleMouseUp.bind(this),
             touchstart: this.handleTouchStart.bind(this),
             touchend: this.handleTouchEnd.bind(this),
-            contextmenu: (e) => e.preventDefault()
+            contextmenu: (e) => e.preventDefault(),
+            mobileLickStart: this.handleMobileLickStart.bind(this),
+            mobileLickEnd: this.handleMobileLickEnd.bind(this)
         };
     }
 
+    detectMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+               (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+    }
+
     initialize() {
+        // Get mobile lick button reference
+        this.mobileLickButton = document.getElementById('mobileLickButton');
+        
         // Start screen events
         this.game.ui.elements.playButton.addEventListener('click', () => {
             this.game.audio.play('click'); // Play click sound
@@ -840,24 +850,60 @@ class EventManager {
     }
 
     startGameControls() {
-        document.addEventListener('keydown', this.boundHandlers.keydown);
-        document.addEventListener('keyup', this.boundHandlers.keyup);
-        document.addEventListener('mousedown', this.boundHandlers.mousedown);
-        document.addEventListener('mouseup', this.boundHandlers.mouseup);
-        document.addEventListener('touchstart', this.boundHandlers.touchstart);
-        document.addEventListener('touchend', this.boundHandlers.touchend);
+        // On mobile devices, only listen to the mobile button
+        if (this.isMobileDevice && this.mobileLickButton) {
+            this.mobileLickButton.addEventListener('touchstart', this.boundHandlers.mobileLickStart);
+            this.mobileLickButton.addEventListener('touchend', this.boundHandlers.mobileLickEnd);
+            this.mobileLickButton.addEventListener('touchcancel', this.boundHandlers.mobileLickEnd);
+            this.mobileLickButton.addEventListener('mousedown', this.boundHandlers.mobileLickStart);
+            this.mobileLickButton.addEventListener('mouseup', this.boundHandlers.mobileLickEnd);
+            this.mobileLickButton.addEventListener('mouseleave', this.boundHandlers.mobileLickEnd);
+        } else {
+            // Desktop controls
+            document.addEventListener('keydown', this.boundHandlers.keydown);
+            document.addEventListener('keyup', this.boundHandlers.keyup);
+            document.addEventListener('mousedown', this.boundHandlers.mousedown);
+            document.addEventListener('mouseup', this.boundHandlers.mouseup);
+            document.addEventListener('touchstart', this.boundHandlers.touchstart);
+            document.addEventListener('touchend', this.boundHandlers.touchend);
+        }
         document.addEventListener('contextmenu', this.boundHandlers.contextmenu);
     }
 
     stopGameControls() {
-        document.removeEventListener('keydown', this.boundHandlers.keydown);
-        document.removeEventListener('keyup', this.boundHandlers.keyup);
-        document.removeEventListener('mousedown', this.boundHandlers.mousedown);
-        document.removeEventListener('mouseup', this.boundHandlers.mouseup);
-        document.removeEventListener('touchstart', this.boundHandlers.touchstart);
-        document.removeEventListener('touchend', this.boundHandlers.touchend);
+        // Remove mobile button listeners
+        if (this.isMobileDevice && this.mobileLickButton) {
+            this.mobileLickButton.removeEventListener('touchstart', this.boundHandlers.mobileLickStart);
+            this.mobileLickButton.removeEventListener('touchend', this.boundHandlers.mobileLickEnd);
+            this.mobileLickButton.removeEventListener('touchcancel', this.boundHandlers.mobileLickEnd);
+            this.mobileLickButton.removeEventListener('mousedown', this.boundHandlers.mobileLickStart);
+            this.mobileLickButton.removeEventListener('mouseup', this.boundHandlers.mobileLickEnd);
+            this.mobileLickButton.removeEventListener('mouseleave', this.boundHandlers.mobileLickEnd);
+        } else {
+            // Desktop controls
+            document.removeEventListener('keydown', this.boundHandlers.keydown);
+            document.removeEventListener('keyup', this.boundHandlers.keyup);
+            document.removeEventListener('mousedown', this.boundHandlers.mousedown);
+            document.removeEventListener('mouseup', this.boundHandlers.mouseup);
+            document.removeEventListener('touchstart', this.boundHandlers.touchstart);
+            document.removeEventListener('touchend', this.boundHandlers.touchend);
+        }
         document.removeEventListener('contextmenu', this.boundHandlers.contextmenu);
         this.isLicking = false;
+    }
+
+    handleMobileLickStart(e) {
+        e.preventDefault();
+        if (this.game.state === 'playing') {
+            this.startLicking();
+        }
+    }
+
+    handleMobileLickEnd(e) {
+        e.preventDefault();
+        if (this.game.state === 'playing') {
+            this.stopLicking();
+        }
     }
 
     handleKeyDown(e) {
@@ -1180,10 +1226,32 @@ class Game {
         const topEntries = this.leaderboard.getTopEntries();
         this.ui.updateLeaderboard(topEntries);
     }
+
+    updateInstructionText() {
+        const gameInstruction = document.querySelector('.game-instruction p');
+        const startInstruction = document.querySelector('.lick-instruction');
+        
+        if (this.events.isMobileDevice) {
+            if (gameInstruction) {
+                gameInstruction.innerHTML = 'Click and hold the button<br>to lick the candy';
+            }
+            if (startInstruction) {
+                startInstruction.innerHTML = 'Click and hold the <strong>BUTTON</strong><br>to lick the candy';
+            }
+        } else {
+            if (gameInstruction) {
+                gameInstruction.innerHTML = 'Hold <strong>SPACEBAR</strong> or <strong>CLICK</strong> to lick the candy';
+            }
+            if (startInstruction) {
+                startInstruction.innerHTML = 'Hold <strong>SPACEBAR</strong> or <strong>CLICK</strong> to lick the candy';
+            }
+        }
+    }
 }
 
 // Initialize game when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.game = new Game();
+    window.game.updateInstructionText();
     console.log('Lick It & Run - Game Initialized');
 });

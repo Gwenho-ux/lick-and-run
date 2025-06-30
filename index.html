@@ -37,7 +37,7 @@
                 <h2>How to Play</h2>
                 <div class="instruction-item">
                     <span class="icon">🍭</span>
-                    <p>Hold <strong>SPACEBAR</strong> or <strong>CLICK</strong> to lick the candy</p>
+                    <p class="lick-instruction">Hold <strong>SPACEBAR</strong> or <strong>CLICK</strong> to lick the candy</p>
                 </div>
                 <div class="instruction-item">
                     <span class="icon">⏱️</span>
@@ -45,7 +45,7 @@
                 </div>
                 <div class="instruction-item">
                     <span class="icon">👀</span>
-                    <p>Stop licking when the character looks back!</p>
+                    <p>Stop licking when Angel looks back!</p>
                 </div>
                 <div class="instruction-item">
                     <span class="icon">⚡</span>
@@ -74,6 +74,11 @@
 
     <!-- Game Screen -->
     <div id="gameScreen" class="screen">
+        <!-- Game Instructions (moved above game container) -->
+        <div class="game-instruction">
+            <p>Hold <strong>SPACEBAR</strong> or <strong>CLICK</strong> to lick the candy</p>
+        </div>
+        
         <div class="game-container">
             <!-- Character Area -->
             <div class="character-area">
@@ -117,10 +122,10 @@
             </div>
         </div>
         
-        <!-- Game Instructions -->
-        <div class="game-instruction">
-            <p>Hold <strong>SPACEBAR</strong> or <strong>CLICK</strong> to lick the candy</p>
-        </div>
+        <!-- Mobile Lick Button -->
+        <button id="mobileLickButton" class="mobile-lick-button">
+            <span class="button-text">HOLD TO LICK</span>
+        </button>
     </div>
 
     <!-- Win Screen -->
@@ -153,7 +158,7 @@
             <div class="result-container lose">
                 <h1 class="result-title">YOU GOT CAUGHT!</h1>
                 <div class="caught-effect"></div>
-                <p class="result-message">The character saw you licking!</p>
+                <p class="result-message">Angel saw you licking!</p>
                 <button class="replay-button" id="caughtReplayButton">
                     <span class="button-text">TRY AGAIN</span>
                     <span class="button-glow"></span>

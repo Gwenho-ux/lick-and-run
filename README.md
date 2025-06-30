@@ -9,8 +9,8 @@ A modern, browser-based timing game built with vanilla JavaScript, HTML, and CSS
 **How to Play**:
 - Hold `SPACEBAR` or `CLICK` to lick the candy
 - Release immediately when you see the red flash warning
-- Stop licking if the character turns around
-- Watch out for fake alerts - the character might say "Umm...?" without turning
+- Stop licking if Angel turns around
+- Watch out for fake alerts - Angel might say "Umm...?" without turning
 - Win by reaching 15 seconds of total licking time
 
 ## 🚀 Quick Start
@@ -26,7 +26,7 @@ No installation or server required - it's a standalone web game!
 
 ### Game Mechanics
 - **Dynamic Stare System**: Character randomly looks back with warning flash
-- **Fake Alerts**: Sometimes the character makes sounds without turning
+- **Fake Alerts**: Sometimes Angel makes sounds without turning
 - **Progress Tracking**: Visual progress bar shows licking percentage
 - **Timer System**: 60-second countdown with visual timer bar
 - **Intensity Mode**: Last 3 seconds feature pulsing screen effects

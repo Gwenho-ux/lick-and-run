@@ -50,7 +50,7 @@ body::before {
     z-index: -1;
 }
 
-/* Screen Management */
+/* Screen Layouts */
 .screen {
     position: fixed;
     top: 0;
@@ -58,8 +58,8 @@ body::before {
     width: 100%;
     height: 100%;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.5s ease;
@@ -68,6 +68,12 @@ body::before {
 .screen.active {
     opacity: 1;
     pointer-events: all;
+}
+
+/* Game Screen specific layout */
+#gameScreen {
+    flex-direction: column;
+    padding: 20px;
 }
 
 .screen-content {
@@ -108,7 +114,7 @@ body::before {
     display: block;
     color: var(--accent-cyan);
     text-shadow: 0 0 30px rgba(0, 245, 255, 0.8);
-    font-size: 3.5rem;
+    font-size: 1.8rem;
 }
 
 .sparkle-effect {
@@ -126,8 +132,8 @@ body::before {
 .instructions {
     background: rgba(36, 0, 70, 0.6);
     border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 12px;
+    margin-bottom: 12px;
     backdrop-filter: blur(10px);
     border: 2px solid rgba(157, 78, 221, 0.3);
     box-shadow: var(--shadow-card);
@@ -595,13 +601,13 @@ body::before {
 }
 
 .audio-toggle {
-    width: 60px;
-    height: 60px;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
     background: rgba(36, 0, 70, 0.95);
     border: 3px solid rgba(157, 78, 221, 0.8);
     color: white;
-    font-size: 28px;
+    font-size: 18px;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
@@ -889,7 +895,7 @@ body::before {
 /* Game Instruction */
 .game-instruction {
     text-align: center;
-    margin-top: 20px;
+    margin-bottom: 20px;
     color: var(--text-secondary);
     font-size: 1.1rem;
     opacity: 0.8;
@@ -900,14 +906,75 @@ body::before {
     font-weight: 700;
 }
 
+/* Mobile Lick Button */
+.mobile-lick-button {
+    display: none; /* Hidden by default, shown only on mobile */
+    width: 80%;
+    max-width: 300px;
+    margin: 20px auto 0;
+    padding: 20px 30px;
+    background: var(--gradient-candy);
+    border: none;
+    border-radius: 50px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(157, 78, 221, 0.5);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.mobile-lick-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 3px 15px rgba(157, 78, 221, 0.7);
+}
+
+.mobile-lick-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: left 0.3s ease;
+}
+
+.mobile-lick-button:active::before {
+    left: 100%;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+    /* Show mobile lick button on mobile devices */
+    .mobile-lick-button {
+        display: block;
+    }
+    
+    /* Disable pointer events on game container for mobile to prevent save image popup */
+    .game-container {
+        pointer-events: none;
+    }
+    
+    /* Ensure all children of game container are also non-interactive */
+    .game-container * {
+        pointer-events: none;
+    }
+    
+    /* Re-enable pointer events for audio controls which are outside game container */
+    .audio-controls {
+        pointer-events: auto;
+    }
+    
     .game-title {
         font-size: 1.8rem;
     }
     
     .title-accent {
-        font-size: 2.2rem;
+        font-size: 1.8rem;
     }
     
     /* Make audio controls smaller on mobile */
@@ -931,8 +998,8 @@ body::before {
     }
     
     .instructions {
-        padding: 15px;
-        margin-bottom: 15px;
+        padding: 12px;
+        margin-bottom: 12px;
     }
     
     .instructions h2 {
@@ -1009,12 +1076,27 @@ body::before {
     }
     
     .game-instruction {
-        margin-top: 15px;
+        margin-bottom: 15px;
         font-size: 0.95rem;
     }
 }
 
 @media (max-width: 480px) {
+    /* Game screen layout adjustments for very small screens */
+    #gameScreen {
+        padding: 10px;
+    }
+    
+    .game-container {
+        margin: 10px 0;
+    }
+    
+    .mobile-lick-button {
+        margin-top: 15px;
+        padding: 18px 25px;
+        font-size: 1.1rem;
+    }
+    
     .game-title {
         font-size: 1.5rem;
     }
@@ -1059,7 +1141,7 @@ body::before {
     }
     
     .game-instruction {
-        margin-top: 10px;
+        margin-bottom: 10px;
         font-size: 0.85rem;
     }
 }
