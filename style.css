@@ -297,9 +297,12 @@ body::before {
     color: var(--bg-dark);
     padding: 10px 20px;
     border-radius: 20px;
-    font-weight: 600;
+    font-weight: 900;
+    font-size: 2rem;
     opacity: 0;
     transition: opacity 0.3s ease;
+    min-width: 50px;
+    text-align: center;
 }
 
 .speech-bubble.show {
@@ -322,7 +325,7 @@ body::before {
 /* Candy Area */
 .candy-area {
     position: absolute;
-    bottom: -38px; /* 10% of 380px to crop from bottom */
+    bottom: -76px; /* 20% of 380px to crop from bottom (10% lower) */
     left: 50%;
     transform: translateX(-50%);
     opacity: 0;
@@ -401,23 +404,9 @@ body::before {
     animation: folderSwing 2s ease-in-out infinite;
 }
 
-/* Flash Warning */
+/* Flash Warning - Deprecated, keeping for compatibility */
 .flash-warning {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: 15px solid #FF0000;
-    background: radial-gradient(ellipse at center, transparent 0%, rgba(255, 0, 0, 0.2) 100%);
-    opacity: 0;
-    pointer-events: none;
-    z-index: 100;
-    box-shadow: inset 0 0 50px rgba(255, 0, 0, 0.5);
-}
-
-.flash-warning.active {
-    animation: flashRed 0.8s ease 2; /* Longer duration and repeat twice */
+    display: none;
 }
 
 /* Timer Bar */
@@ -800,7 +789,7 @@ body::before {
     }
     
     .candy-area {
-        bottom: -25px; /* 10% of 250px to crop from bottom */
+        bottom: -50px; /* 20% of 250px to crop from bottom (10% lower) */
     }
     
     .document-mode {

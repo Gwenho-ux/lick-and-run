@@ -184,22 +184,21 @@ class Character {
     }
 
     update(elapsedTime) {
-        if (elapsedTime >= this.nextEventTime && !this.eventScheduled) {
+        // Check if it's time to show warning
+        if (elapsedTime >= (this.nextEventTime - CONFIG.FLASH_WARNING_TIME) && !this.eventScheduled) {
             this.eventScheduled = true;
             
-            // Flash warning before event
-            setTimeout(() => {
-                this.onFlashWarning();
-            }, (this.nextEventTime - elapsedTime - CONFIG.FLASH_WARNING_TIME) * 1000);
+            // Show warning immediately
+            this.onFlashWarning();
 
-            // Execute event
+            // Execute event after warning time
             setTimeout(() => {
                 if (Math.random() < CONFIG.FAKE_ALERT_CHANCE) {
                     this.executeFakeAlert();
                 } else {
                     this.executeStare();
                 }
-            }, (this.nextEventTime - elapsedTime) * 1000);
+            }, CONFIG.FLASH_WARNING_TIME * 1000);
         }
     }
 
@@ -456,17 +455,22 @@ class UIManager {
 
 
     showFakeAlert() {
-        this.elements.speechBubble.classList.add('show');
-        setTimeout(() => {
-            this.elements.speechBubble.classList.remove('show');
-        }, 1000);
+        // Fake alerts now use the same warning as real stares
+        // The warning already shows via flashWarning()
     }
 
     flashWarning() {
-        this.elements.flashWarning.classList.add('active');
+        // Show exclamation mark in speech bubble
+        const speechText = this.elements.speechBubble.querySelector('.speech-text');
+        if (speechText) {
+            speechText.textContent = '!';
+        }
+        this.elements.speechBubble.classList.add('show');
+        
+        // Hide after 1.5 seconds
         setTimeout(() => {
-            this.elements.flashWarning.classList.remove('active');
-        }, 1600); // 0.8s animation × 2 repeats = 1.6s
+            this.elements.speechBubble.classList.remove('show');
+        }, 1500);
     }
 
     updateCountdown(number) {
