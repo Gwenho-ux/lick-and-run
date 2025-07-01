@@ -69,6 +69,10 @@
         <div class="countdown-container">
             <div class="countdown-number" id="countdownNumber">3</div>
             <div class="countdown-pulse"></div>
+            <div class="countdown-instruction">
+                <p class="desktop-text">Hold <strong>SPACEBAR</strong> or <strong>LEFT CLICK</strong> to finish licking the whole candy</p>
+                <p class="mobile-text">Hold the <strong>BUTTON</strong> to finish licking the whole candy</p>
+            </div>
         </div>
     </div>
 
@@ -76,7 +80,8 @@
     <div id="gameScreen" class="screen">
         <!-- Game Instructions (moved above game container) -->
         <div class="game-instruction">
-            <p>Hold <strong>SPACEBAR</strong> or <strong>CLICK</strong> to lick the candy</p>
+            <p class="desktop-text">Hold <strong>SPACEBAR</strong> or <strong>LEFT CLICK</strong> to finish licking the whole candy</p>
+            <p class="mobile-text">Hold the <strong>BUTTON</strong> to finish licking the whole candy</p>
         </div>
         
         <div class="game-container">
@@ -117,7 +122,16 @@
             <div class="timer-bar">
                 <div class="timer-container">
                     <div class="timer-fill" id="timerBar"></div>
-                    <span class="timer-text" id="timerText">60s</span>
+                    <span class="timer-text" id="timerText">⏰ 60s</span>
+                </div>
+            </div>
+
+            <!-- Candy Progress Bar -->
+            <div class="candy-progress-bar">
+                <div class="candy-progress-container">
+                    <div class="candy-progress-fill" id="candyProgressBar"></div>
+                    <div class="candy-icon">🍭</div>
+                    <span class="candy-progress-text" id="candyProgressText">0%</span>
                 </div>
             </div>
         </div>

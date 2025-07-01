@@ -239,6 +239,10 @@ body::before {
 /* Countdown Screen */
 .countdown-container {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
 }
 
 .countdown-number {
@@ -263,6 +267,24 @@ body::before {
     border-radius: 50%;
     opacity: 0;
     animation: pulseRing 1s ease;
+}
+
+.countdown-instruction {
+    text-align: center;
+    max-width: 600px;
+    padding: 0 20px;
+}
+
+.countdown-instruction p {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+.countdown-instruction strong {
+    color: var(--accent-cyan);
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
 }
 
 /* Game Screen */
@@ -475,29 +497,32 @@ body::before {
 /* Timer Bar */
 .timer-bar {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 60px;
+    bottom: 20px;
+    right: 20px;
+    width: 120px;
+    height: 50px;
     background: rgba(13, 2, 33, 0.9);
-    border-top: 3px solid rgba(157, 78, 221, 0.5);
-    border-bottom-left-radius: 30px;
-    border-bottom-right-radius: 30px;
+    border: 3px solid rgba(157, 78, 221, 0.5);
+    border-radius: 25px;
     z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    user-select: none;
 }
 
 .timer-container {
     position: relative;
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .timer-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #00EDAA, #5BF05A); /* Default green gradient */
-    width: 100%;
-    transition: width 1s linear, background 0.5s ease;
+    display: none; /* Hide the timer progress animation */
 }
 
 /* Dynamic timer colors based on percentage */
@@ -514,13 +539,65 @@ body::before {
 }
 
 .timer-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 1.5rem;
+    position: relative;
     font-weight: 700;
-    text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    z-index: 2;
+}
+
+/* Candy Progress Bar */
+.candy-progress-bar {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 200px;
+    height: 50px;
+    z-index: 50;
+    pointer-events: none;
+    user-select: none;
+}
+
+.candy-progress-container {
+    width: 100%;
+    height: 100%;
+    background: rgba(13, 2, 33, 0.9);
+    border-radius: 25px;
+    border: 3px solid rgba(157, 78, 221, 0.5);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+}
+
+.candy-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 0 10px rgba(255, 0, 110, 0.5));
+    z-index: 2;
+}
+
+.candy-progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--gradient-candy);
+    border-radius: 22px;
+    width: 0%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 20px rgba(255, 0, 110, 0.5);
+}
+
+.candy-progress-text {
+    position: relative;
+    font-weight: 700;
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    z-index: 2;
 }
 
 /* Result Screens */
@@ -906,6 +983,15 @@ body::before {
     font-weight: 700;
 }
 
+/* Mobile/Desktop Text Visibility */
+.desktop-text {
+    display: block;
+}
+
+.mobile-text {
+    display: none;
+}
+
 /* Desktop specific adjustments */
 @media (min-width: 769px) {
     /* Move candy and folder down 10% more on desktop */
@@ -915,6 +1001,11 @@ body::before {
     
     .document-mode {
         bottom: -76px !important; /* 20% of 380px (10% + 10% more) */
+    }
+    
+    /* Ensure mobile lick button is hidden on desktop */
+    .mobile-lick-button {
+        display: none !important;
     }
 }
 
@@ -961,6 +1052,15 @@ body::before {
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+    /* Show mobile text, hide desktop text */
+    .desktop-text {
+        display: none;
+    }
+    
+    .mobile-text {
+        display: block;
+    }
+    
     /* Show mobile lick button on mobile devices */
     .mobile-lick-button {
         display: block;
@@ -1067,11 +1167,33 @@ body::before {
     }
     
     .timer-bar {
-        height: 50px;
+        bottom: 10px;
+        right: 10px;
+        width: 100px;
+        height: 40px;
     }
     
     .timer-text {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
+    }
+    
+    .candy-progress-bar {
+        bottom: 10px;
+        left: 10px;
+        width: 160px;
+        height: 40px;
+    }
+    
+    .candy-icon {
+        font-size: 1.8rem;
+    }
+    
+    .candy-progress-container {
+        padding: 0 12px;
+    }
+    
+    .candy-progress-text {
+        font-size: 1.4rem;
     }
     
     .screen-content {
@@ -1090,6 +1212,14 @@ body::before {
     .game-instruction {
         margin-bottom: 15px;
         font-size: 0.95rem;
+    }
+    
+    .countdown-instruction p {
+        font-size: 1.2rem;
+    }
+    
+    .countdown-container {
+        gap: 30px;
     }
 }
 
@@ -1155,6 +1285,44 @@ body::before {
     .game-instruction {
         margin-bottom: 10px;
         font-size: 0.85rem;
+    }
+    
+    .timer-bar {
+        bottom: 5px;
+        right: 5px;
+        width: 90px;
+        height: 35px;
+    }
+    
+    .timer-text {
+        font-size: 1.2rem;
+    }
+    
+    .candy-progress-bar {
+        bottom: 5px;
+        left: 5px;
+        width: 140px;
+        height: 35px;
+    }
+    
+    .candy-icon {
+        font-size: 1.6rem;
+    }
+    
+    .candy-progress-container {
+        padding: 0 10px;
+    }
+    
+    .candy-progress-text {
+        font-size: 1.2rem;
+    }
+    
+    .countdown-instruction p {
+        font-size: 1rem;
+    }
+    
+    .countdown-container {
+        gap: 20px;
     }
 }
 

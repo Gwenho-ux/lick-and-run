@@ -6,7 +6,7 @@
 // Game Configuration
 const CONFIG = {
     GAME_DURATION: 60, // seconds
-    LICK_GOAL: 35, // seconds (increased from 30 - need to lick 5 seconds more)
+    LICK_GOAL: 15, // seconds - reverted to original goal for better gameplay
     FLASH_WARNING_TIME: 0.8, // seconds before stare (decreased from 1.0 for less reaction time)
     PULSE_START_TIME: 3, // last 3 seconds
     MIN_STARE_INTERVAL: 4, // minimum seconds between stares (decreased from 5 - more frequent checks)
@@ -14,7 +14,9 @@ const CONFIG = {
     MIN_STARE_DURATION: 1.5, // minimum stare duration (increased from 1.0)
     MAX_STARE_DURATION: 2.5, // maximum stare duration (increased from 2.0)
     FAKE_ALERT_CHANCE: 0.25, // 25% chance of fake alert (increased from 20%)
-    COUNTDOWN_DURATION: 3 // countdown seconds
+    COUNTDOWN_DURATION: 3, // countdown seconds
+    PROGRESS_UPDATE_INTERVAL: 50, // milliseconds between progress updates (20 FPS for UI)
+    SPARKLE_COUNT: 5 // reduced sparkle particles for better performance
 };
 
 /**
@@ -615,20 +617,8 @@ class UIManager {
     }
 
     updateTimer(remaining) {
-        const percentage = (remaining / CONFIG.GAME_DURATION) * 100;
-        this.elements.timerBar.style.width = `${percentage}%`;
-        this.elements.timerText.textContent = `${Math.ceil(remaining)}s`;
-
-        // Update timer color based on time remaining
-        this.elements.timerBar.classList.remove('timer-green', 'timer-yellow', 'timer-red');
-        
-        if (percentage > 50) {
-            this.elements.timerBar.classList.add('timer-green');
-        } else if (percentage > 20) {
-            this.elements.timerBar.classList.add('timer-yellow');
-        } else {
-            this.elements.timerBar.classList.add('timer-red');
-        }
+        // Only update the text, no progress bar animation
+        this.elements.timerText.textContent = `⏰ ${Math.ceil(remaining)}s`;
 
         // Red frame effect for last 5 seconds
         if (remaining <= 5 && !this.elements.gameContainer.classList.contains('critical-time')) {
@@ -644,6 +634,14 @@ class UIManager {
     updateLickProgress(progress) {
         this.elements.lickProgressBar.style.width = `${progress}%`;
         this.elements.lickProgressText.textContent = `${Math.floor(progress)}%`;
+        
+        // Also update the new candy progress bar
+        const candyProgressBar = document.getElementById('candyProgressBar');
+        const candyProgressText = document.getElementById('candyProgressText');
+        if (candyProgressBar && candyProgressText) {
+            candyProgressBar.style.width = `${progress}%`;
+            candyProgressText.textContent = `${Math.floor(progress)}%`;
+        }
     }
 
     showLicking(isLicking) {
