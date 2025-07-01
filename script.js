@@ -237,9 +237,11 @@ class Character {
                 speechText.textContent = randomMessage;
                 speechBubble.classList.add('show');
                 
-                // Play happy sound
+                // Play happy sound with slight delay for mobile
                 if (window.game && window.game.audio) {
-                    window.game.audio.play('happy');
+                    setTimeout(() => {
+                        window.game.audio.play('happy');
+                    }, 100);
                 }
                 
                 // Hide speech bubble after 1.5 seconds or before stare ends
@@ -355,6 +357,7 @@ class AudioManager {
         // Create Audio objects for each sound
         this.audioElements = {};
         this.isInitialized = false;
+        this.audioUnlocked = false; // Track if audio has been unlocked on mobile
         
         // Mute states
         this.musicMuted = false;
@@ -402,6 +405,22 @@ class AudioManager {
         this.isInitialized = true;
     }
 
+    unlockAudio() {
+        if (this.audioUnlocked) return;
+        
+        // Try to play and immediately pause each audio to unlock on mobile
+        Object.values(this.audioElements).forEach(audio => {
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }).catch(() => {
+                // Silent fail - expected on some browsers
+            });
+        });
+        
+        this.audioUnlocked = true;
+    }
+
     play(soundName, loop = false) {
         if (!this.isInitialized) {
             this.preload();
@@ -413,12 +432,22 @@ class AudioManager {
         
         const audio = this.audioElements[soundName];
         if (audio) {
+            // Clone the audio for overlapping sounds (especially for win/lose/happy)
+            const playableAudio = soundName === 'win' || soundName === 'lose' || soundName === 'happy' 
+                ? new Audio(audio.src) 
+                : audio;
+                
+            // Set volume for cloned audio
+            if (playableAudio !== audio) {
+                playableAudio.volume = audio.volume;
+            }
+            
             // Reset the audio to start
-            audio.currentTime = 0;
+            playableAudio.currentTime = 0;
             
             // Set loop if specified
             if (loop !== undefined) {
-                audio.loop = loop;
+                playableAudio.loop = loop;
             }
             
             // Track if background music has started
@@ -426,10 +455,17 @@ class AudioManager {
                 this.backgroundMusicStarted = true;
             }
             
-            // Play the sound
-            audio.play().catch(error => {
-                console.warn(`Failed to play sound: ${soundName}`, error);
-            });
+            // Play the sound with better error handling
+            const playPromise = playableAudio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.warn(`Failed to play sound: ${soundName}`, error);
+                    // Try to unlock audio if it hasn't been done yet
+                    if (!this.audioUnlocked) {
+                        this.unlockAudio();
+                    }
+                });
+            }
         }
     }
 
@@ -812,6 +848,8 @@ class EventManager {
         
         // Start screen events
         this.game.ui.elements.playButton.addEventListener('click', () => {
+            // Unlock audio on mobile devices
+            this.game.audio.unlockAudio();
             this.game.audio.play('click'); // Play click sound
             if (this.game.ui.validatePlayerInput()) {
                 this.game.startGame();
@@ -914,6 +952,8 @@ class EventManager {
 
     handleMobileLickStart(e) {
         e.preventDefault();
+        // Ensure audio is unlocked on mobile
+        this.game.audio.unlockAudio();
         if (this.game.state === 'playing') {
             this.startLicking();
         }
@@ -1036,6 +1076,9 @@ class Game {
                 return;
             }
             
+            // Always unlock audio on first interaction (especially important for mobile)
+            this.audio.unlockAudio();
+            
             if (!this.musicStarted && !this.audio.musicMuted) {
                 this.audio.play('background', true);
                 this.musicStarted = true;
@@ -1063,6 +1106,9 @@ class Game {
     startGame() {
         const playerData = this.ui.getPlayerInput();
         this.player = new Player(playerData.name, playerData.email);
+        
+        // Ensure audio is fully initialized on mobile
+        this.audio.unlockAudio();
         
         // Start background music when game starts
         this.startBackgroundMusic();
@@ -1221,9 +1267,15 @@ class Game {
             this.leaderboard.addEntry(this.player.toLeaderboardEntry());
             this.updateLeaderboard();
             this.leaderboard.saveToStorage();
-            this.audio.play('win');
+            // Delay win sound for mobile compatibility
+            setTimeout(() => {
+                this.audio.play('win');
+            }, 200);
         } else if (outcome === 'caught' || outcome === 'timeout') {
-            this.audio.play('lose');
+            // Delay lose sound for mobile compatibility
+            setTimeout(() => {
+                this.audio.play('lose');
+            }, 200);
         }
 
         // Show appropriate end screen
