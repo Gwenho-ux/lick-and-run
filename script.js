@@ -5,15 +5,15 @@
 
 // Game Configuration
 const CONFIG = {
-    GAME_DURATION: 60, // seconds
-    LICK_GOAL: 15, // seconds - reverted to original goal for better gameplay
-    FLASH_WARNING_TIME: 0.8, // seconds before stare (decreased from 1.0 for less reaction time)
+    GAME_DURATION: 50, // seconds - reduced from 60 for more pressure
+    LICK_GOAL: 25, // seconds - increased from 15 (need to lick 50% of the time!)
+    FLASH_WARNING_TIME: 0.6, // seconds before stare (decreased from 0.8 for less reaction time)
     PULSE_START_TIME: 3, // last 3 seconds
-    MIN_STARE_INTERVAL: 4, // minimum seconds between stares (decreased from 5 - more frequent checks)
-    MAX_STARE_INTERVAL: 12, // maximum seconds between stares (decreased from 15 - more frequent checks)
-    MIN_STARE_DURATION: 1.5, // minimum stare duration (increased from 1.0)
-    MAX_STARE_DURATION: 2.5, // maximum stare duration (increased from 2.0)
-    FAKE_ALERT_CHANCE: 0.25, // 25% chance of fake alert (increased from 20%)
+    MIN_STARE_INTERVAL: 3, // minimum seconds between stares (decreased from 4 - more frequent checks)
+    MAX_STARE_INTERVAL: 8, // maximum seconds between stares (decreased from 12 - much more frequent)
+    MIN_STARE_DURATION: 2.0, // minimum stare duration (increased from 1.5)
+    MAX_STARE_DURATION: 3.5, // maximum stare duration (increased from 2.5 - longer danger periods)
+    FAKE_ALERT_CHANCE: 0.35, // 35% chance of fake alert (increased from 25% - more confusion)
     COUNTDOWN_DURATION: 3, // countdown seconds
     PROGRESS_UPDATE_INTERVAL: 50, // milliseconds between progress updates (20 FPS for UI)
     SPARKLE_COUNT: 5 // reduced sparkle particles for better performance
@@ -162,7 +162,7 @@ class Character {
                 this.currentMoveImage = this.currentMoveImage === 1 ? 2 : 1;
                 this.characterImage.src = `assets/Images/charactor/character-move${this.currentMoveImage === 2 ? '-2' : ''}.png`;
             }
-        }, 500 + Math.random() * 1000); // Random interval between 0.5-1.5 seconds (50% faster)
+        }, 300 + Math.random() * 700); // Random interval between 0.3-1.0 seconds (more frantic movement)
     }
 
     stopMoveAnimation() {
@@ -748,7 +748,7 @@ class UIManager {
 
     createSparkles() {
         // Create sparkle particle effects
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < CONFIG.SPARKLE_COUNT; i++) {
             setTimeout(() => {
                 const sparkle = document.createElement('div');
                 sparkle.className = 'sparkle-particle';
@@ -1008,6 +1008,7 @@ class Game {
         this.leaderboard = new LeaderboardManager();
         this.events = new EventManager(this);
         this.isLicking = false;
+        this.lastProgressUpdate = 0; // For throttling progress updates
 
         this.initialize();
     }
@@ -1125,11 +1126,17 @@ class Game {
         // Update licking progress if licking
         if (this.isLicking && !this.character.isStaring) {
             this.player.updateLickingTime(deltaTime);
-            const progress = this.player.getProgress();
-            this.ui.updateLickProgress(progress);
             
-            // Update candy progression
-            this.candyManager.updateProgress(progress);
+            // Throttle progress updates to improve performance
+            const now = performance.now();
+            if (now - this.lastProgressUpdate >= CONFIG.PROGRESS_UPDATE_INTERVAL) {
+                const progress = this.player.getProgress();
+                this.ui.updateLickProgress(progress);
+                
+                // Update candy progression
+                this.candyManager.updateProgress(progress);
+                this.lastProgressUpdate = now;
+            }
 
             // Check win condition
             if (this.player.hasWon() && this.state === 'playing') {
